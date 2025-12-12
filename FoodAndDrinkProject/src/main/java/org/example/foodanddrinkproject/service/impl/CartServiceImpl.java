@@ -54,7 +54,6 @@ public class CartServiceImpl implements CartService {
             throw new BadRequestException("Product is not available.");
         }
 
-        // Check if item exists in cart
         Optional<CartItem> existingItemOpt = cart.getItems().stream()
                 .filter(item -> item.getProduct().getId().equals(product.getId()))
                 .findFirst();
@@ -64,7 +63,6 @@ public class CartServiceImpl implements CartService {
             newQuantity += existingItemOpt.get().getQuantity();
         }
 
-        // Critical: Check Stock
         if (newQuantity > product.getStockQuantity()) {
             throw new BadRequestException("Not enough stock. Available: " + product.getStockQuantity());
         }
@@ -92,16 +90,12 @@ public class CartServiceImpl implements CartService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found in cart", "productId", request.getProductId()));
 
-        // --- THE FIX IS HERE ---
-        // Instead of -1, we subtract the requested amount
         int amountToRemove = request.getQuantity();
         int newQuantity = cartItem.getQuantity() - amountToRemove;
 
         if (newQuantity <= 0) {
-            // If the result is 0 or negative, remove the item entirely
             cart.removeItem(cartItem);
         } else {
-            // Otherwise, update with the new lower value
             cartItem.setQuantity(newQuantity);
         }
 
@@ -131,10 +125,8 @@ public class CartServiceImpl implements CartService {
         cartRepository.save(cart);
     }
 
-    // --- Helpers ---
 
     private Cart getActiveCartOrCreate(Long userId) {
-        // Logic: Find the cart with status ACTIVE
         return cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
                 .orElseGet(() -> {
                     User user = userRepository.findById(userId)
@@ -156,7 +148,6 @@ public class CartServiceImpl implements CartService {
             itemDto.setProductId(item.getProduct().getId());
             itemDto.setProductName(item.getProduct().getName());
             itemDto.setImageUrl(item.getProduct().getImageUrl());
-            // Use discount price if available, else normal price
             BigDecimal unitPrice = item.getProduct().getDiscountPrice() != null
                     ? item.getProduct().getDiscountPrice()
                     : item.getProduct().getPrice();
@@ -168,7 +159,6 @@ public class CartServiceImpl implements CartService {
 
         dto.setItems(items);
 
-        // Calculate Total
         BigDecimal total = items.stream()
                 .map(CartItemDto::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
