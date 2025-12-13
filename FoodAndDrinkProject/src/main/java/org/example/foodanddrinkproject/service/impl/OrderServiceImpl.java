@@ -16,6 +16,7 @@ import org.example.foodanddrinkproject.entity.User;
 import org.example.foodanddrinkproject.enums.CartStatus;
 import org.example.foodanddrinkproject.enums.OrderStatus;
 import org.example.foodanddrinkproject.enums.PaymentStatus;
+import org.example.foodanddrinkproject.event.OrderPlacedEvent;
 import org.example.foodanddrinkproject.exception.BadRequestException;
 import org.example.foodanddrinkproject.exception.ResourceNotFoundException;
 import org.example.foodanddrinkproject.repository.CartRepository;
@@ -24,6 +25,7 @@ import org.example.foodanddrinkproject.repository.ProductRepository;
 import org.example.foodanddrinkproject.repository.UserRepository;
 import org.example.foodanddrinkproject.repository.specification.OrderSpecification;
 import org.example.foodanddrinkproject.service.OrderService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -37,15 +39,18 @@ public class OrderServiceImpl implements OrderService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                             CartRepository cartRepository,
                             ProductRepository productRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -107,7 +112,11 @@ public class OrderServiceImpl implements OrderService {
         cart.setStatus(CartStatus.CHECKED_OUT);
         cartRepository.save(cart);
 
-        return convertToDto(savedOrder);
+        OrderDto orderDto = convertToDto(savedOrder);
+
+        eventPublisher.publishEvent(new OrderPlacedEvent(this, orderDto));
+
+        return orderDto;
     }
 
     @Override

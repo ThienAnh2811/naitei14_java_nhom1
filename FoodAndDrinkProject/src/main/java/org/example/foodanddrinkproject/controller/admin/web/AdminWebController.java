@@ -38,7 +38,6 @@ public class AdminWebController {
         this.dashboardService = dashboardService;
     }
 
-    // --- DASHBOARD ---
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
         model.addAttribute("stats", dashboardService.getStats());
@@ -47,14 +46,11 @@ public class AdminWebController {
         return "admin/dashboard";
     }
 
-    // ========================================================================
-    // CATEGORY MANAGEMENT
-    // ========================================================================
 
     @GetMapping("/categories")
     public String listCategories(Model model) {
         model.addAttribute("categories", categoryService.getAllCategories());
-        model.addAttribute("categoryRequest", new CategoryRequest()); // For the Add Modal
+        model.addAttribute("categoryRequest", new CategoryRequest());
         return "admin/categories";
     }
 
@@ -77,9 +73,6 @@ public class AdminWebController {
         return "redirect:/admin/categories";
     }
 
-    // ========================================================================
-    // PRODUCT MANAGEMENT
-    // ========================================================================
 
     @GetMapping("/products")
     public String listProducts(Model model,
@@ -92,7 +85,7 @@ public class AdminWebController {
     @GetMapping("/products/new")
     public String showCreateProductForm(Model model) {
         model.addAttribute("productRequest", new ProductRequest());
-        model.addAttribute("categories", categoryService.getAllCategories()); // Needed for dropdown
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/product-form";
     }
 
@@ -108,11 +101,9 @@ public class AdminWebController {
         request.setDescription(product.getDescription());
         request.setImageUrl(product.getImageUrl());
         request.setSku(product.getSku());
-        // ... set other fields ...
 
         model.addAttribute("productRequest", request);
-        model.addAttribute("productId", id); // To know we are editing
-        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("productId", id).addAttribute("categories", categoryService.getAllCategories());
         return "admin/product-form";
     }
 
@@ -145,7 +136,6 @@ public class AdminWebController {
         return "redirect:/admin/products";
     }
 
-    // ... existing Orders and Users methods ...
     @GetMapping("/orders")
     public String listOrders(Model model, Pageable pageable) {
         model.addAttribute("orders", orderService.getAllOrders(null, null, pageable));
@@ -158,4 +148,22 @@ public class AdminWebController {
         return "admin/users";
     }
 
+
+
+    @Autowired
+    private ChatworkService chatworkService;
+
+    @GetMapping("/test-chatwork")
+    @ResponseBody
+    public String testChatwork() {
+        OrderDto dummyOrder = new OrderDto();
+        dummyOrder.setId(9999L);
+        dummyOrder.setTotalAmount(new java.math.BigDecimal("150.00"));
+        dummyOrder.setPaymentMethod(PaymentMethod.COD);
+        dummyOrder.setOrderStatus(OrderStatus.PENDING);
+
+        chatworkService.sendOrderNotification(dummyOrder);
+
+        return "Check your Chatwork room!";
+    }
 }
