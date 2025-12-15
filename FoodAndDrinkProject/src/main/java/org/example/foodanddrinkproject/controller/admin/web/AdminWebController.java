@@ -146,6 +146,31 @@ public class AdminWebController {
         return "admin/orders";
     }
 
+    @GetMapping("/orders/{id}")
+    public String viewOrder(@PathVariable Long id, Model model) {
+        OrderDto order = orderService.getOrderByIdForAdmin(id);
+        model.addAttribute("order", order);
+        model.addAttribute("orderStatuses", OrderStatus.values());
+        model.addAttribute("paymentStatuses", org.example.foodanddrinkproject.enums.PaymentStatus.values());
+        
+        // Initialize DTO for form
+        org.example.foodanddrinkproject.dto.AdminUpdateOrderRequest request = new org.example.foodanddrinkproject.dto.AdminUpdateOrderRequest();
+        request.setOrderStatus(order.getOrderStatus());
+        request.setPaymentStatus(order.getPaymentStatus());
+        model.addAttribute("orderRequest", request);
+        
+        return "admin/order-detail";
+    }
+
+    @PostMapping("/orders/update-status")
+    public String updateOrderStatus(@RequestParam Long id, 
+                                    @ModelAttribute("orderRequest") org.example.foodanddrinkproject.dto.AdminUpdateOrderRequest request,
+                                    RedirectAttributes redirectAttributes) {
+        orderService.updateOrder(id, request);
+        redirectAttributes.addFlashAttribute("success", "Order status updated successfully!");
+        return "redirect:/admin/orders/" + id;
+    }
+
     @GetMapping("/users")
     public String listUsers(Model model, Pageable pageable) {
         model.addAttribute("users", userService.getAllUsers(pageable));

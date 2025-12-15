@@ -139,6 +139,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public OrderDto getOrderByIdForAdmin(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        return convertToDto(order);
+    }
+
+    @Override
     public Page<OrderDto> getAllOrders(OrderStatus status, Long userId, Pageable pageable) {
         Specification<Order> spec =
                 OrderSpecification.hasStatus(status)
@@ -202,6 +209,10 @@ public class OrderServiceImpl implements OrderService {
     private OrderDto convertToDto(Order order) {
         OrderDto dto = new OrderDto();
         dto.setId(order.getId());
+        if (order.getUser() != null) {
+            dto.setUserId(order.getUser().getId());
+            dto.setUserName(order.getUser().getFullName());
+        }
         dto.setOrderDate(order.getCreatedAt());
         dto.setShippingAddress(order.getShippingAddress());
         dto.setUserEmail(order.getUser().getEmail());
