@@ -8,4 +8,5 @@ import org.springframework.data.domain.Pageable;
 public interface ProductSuggestionService {
     void createSuggestion(Long userId, Long productId, CreateSuggestionRequest request);
     Page<ProductSuggestionDto> getAllSuggestions(Pageable pageable);
+    void deleteSuggestion(Long id);
 }

@@ -29,17 +29,20 @@ public class AdminWebController {
     private final UserService userService;
     private final DashboardService dashboardService;
     private final ProductSuggestionService suggestionService;
+    private final RatingService ratingService;
 
     public AdminWebController(ProductService productService, CategoryService categoryService,
                               OrderService orderService, UserService userService,
                               DashboardService dashboardService,
-                              ProductSuggestionService suggestionService) {
+                              ProductSuggestionService suggestionService,
+                              RatingService ratingService) {
         this.productService = productService;
         this.categoryService = categoryService;
         this.orderService = orderService;
         this.userService = userService;
         this.dashboardService = dashboardService;
         this.suggestionService = suggestionService;
+        this.ratingService = ratingService;
     }
 
     @GetMapping("/dashboard")
@@ -146,16 +149,100 @@ public class AdminWebController {
         return "admin/orders";
     }
 
+    @GetMapping("/orders/{id}")
+    public String viewOrder(@PathVariable Long id, Model model) {
+        OrderDto order = orderService.getOrderByIdForAdmin(id);
+        model.addAttribute("order", order);
+        model.addAttribute("orderStatuses", OrderStatus.values());
+        model.addAttribute("paymentStatuses", org.example.foodanddrinkproject.enums.PaymentStatus.values());
+        
+        // Initialize DTO for form
+        org.example.foodanddrinkproject.dto.AdminUpdateOrderRequest request = new org.example.foodanddrinkproject.dto.AdminUpdateOrderRequest();
+        request.setOrderStatus(order.getOrderStatus());
+        request.setPaymentStatus(order.getPaymentStatus());
+        model.addAttribute("orderRequest", request);
+        
+        return "admin/order-detail";
+    }
+
+    @PostMapping("/orders/update-status")
+    public String updateOrderStatus(@RequestParam Long id, 
+                                    @ModelAttribute("orderRequest") org.example.foodanddrinkproject.dto.AdminUpdateOrderRequest request,
+                                    RedirectAttributes redirectAttributes) {
+        orderService.updateOrder(id, request);
+        redirectAttributes.addFlashAttribute("success", "Order status updated successfully!");
+        return "redirect:/admin/orders/" + id;
+    }
+
     @GetMapping("/users")
     public String listUsers(Model model, Pageable pageable) {
         model.addAttribute("users", userService.getAllUsers(pageable));
         return "admin/users";
     }
 
+    @GetMapping("/users/edit/{id}")
+    public String showEditUserForm(@PathVariable Long id, Model model) {
+        var user = userService.getUserById(id);
+        
+        org.example.foodanddrinkproject.dto.AdminUpdateUserRequest request = new org.example.foodanddrinkproject.dto.AdminUpdateUserRequest();
+        request.setFullName(user.getFullName());
+        request.setPhoneNumber(user.getPhoneNumber());
+        request.setEnabled(user.isEnabled());
+        request.setRoles(user.getRoles());
+        
+        model.addAttribute("userRequest", request);
+        model.addAttribute("userId", id);
+        model.addAttribute("allRoles", userService.getAllRoles());
+        return "admin/user-form";
+    }
+    
+    @PostMapping("/users/save")
+    public String saveUser(@ModelAttribute("userRequest") org.example.foodanddrinkproject.dto.AdminUpdateUserRequest request,
+                           @RequestParam Long id,
+                           RedirectAttributes redirectAttributes) {
+         userService.updateUser(id, request);
+         redirectAttributes.addFlashAttribute("success", "User updated successfully!");
+         return "redirect:/admin/users";
+    }
+
+    @GetMapping("/users/delete/{id}")
+    public String deleteUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        userService.banUser(id, false);
+        redirectAttributes.addFlashAttribute("success", "User has been disabled.");
+        return "redirect:/admin/users";
+    }
+
+    @GetMapping("/users/enable/{id}")
+    public String enableUser(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        userService.banUser(id, true);
+        redirectAttributes.addFlashAttribute("success", "User has been enabled.");
+        return "redirect:/admin/users";
+    }
+
     @GetMapping("/suggestions")
     public String listSuggestions(Model model, Pageable pageable) {
         model.addAttribute("suggestions", suggestionService.getAllSuggestions(pageable));
         return "admin/suggestions";
+    }
+
+    @GetMapping("/suggestions/delete/{id}")
+    public String deleteSuggestion(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        suggestionService.deleteSuggestion(id);
+        redirectAttributes.addFlashAttribute("success", "Suggestion deleted.");
+        return "redirect:/admin/suggestions";
+    }
+
+    @GetMapping("/reviews")
+    public String listReviews(Model model, Pageable pageable) {
+        model.addAttribute("reviews", ratingService.getAllRatings(pageable));
+        return "admin/reviews";
+    }
+
+    @GetMapping("/reviews/delete/{id}")
+    public String deleteReview(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        ratingService.deleteRating(id);
+        redirectAttributes.addFlashAttribute("success", "Review deleted.");
+        return "redirect:/admin/reviews";
     }
 
 

@@ -51,6 +51,13 @@ public class ProductSuggestionServiceImpl implements ProductSuggestionService {
                 .map(this::convertToDto);
     }
 
+    @Override
+    public void deleteSuggestion(Long id) {
+        if (suggestionRepository.existsById(id)) {
+            suggestionRepository.deleteById(id);
+        }
+    }
+
     private ProductSuggestionDto convertToDto(ProductSuggestion entity) {
         ProductSuggestionDto dto = new ProductSuggestionDto();
         dto.setId(entity.getId());

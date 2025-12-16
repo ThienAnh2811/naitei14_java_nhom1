@@ -13,6 +13,7 @@ public interface OrderService {
     OrderDto placeOrder(Long userId, PlaceOrderRequest request);
     List<OrderDto> getMyOrders(Long userId);
     OrderDto getOrderById(Long userId, Long orderId);
+    OrderDto getOrderByIdForAdmin(Long orderId);
 
     Page<OrderDto> getAllOrders(OrderStatus status, Long userId, Pageable pageable);
     OrderDto updateOrder(Long orderId, AdminUpdateOrderRequest request);

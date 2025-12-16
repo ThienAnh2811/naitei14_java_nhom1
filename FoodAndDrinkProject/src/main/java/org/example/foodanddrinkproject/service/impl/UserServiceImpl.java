@@ -19,10 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final org.example.foodanddrinkproject.repository.RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, org.example.foodanddrinkproject.repository.RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -92,17 +94,46 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
         // Prevent banning yourself (Admin safety)
-        // You might want to get current user ID here to check, but for now simple logic:
-        // Don't ban the main admin if you have a specific ID, etc.
-
         user.setEnabled(isEnabled);
         userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserProfileDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        return mapToUserProfileDto(user);
+    }
+    
+    @Override
+    @Transactional
+    public void updateUser(Long userId, org.example.foodanddrinkproject.dto.AdminUpdateUserRequest request) {
+         User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+         
+         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+             java.util.Set<org.example.foodanddrinkproject.entity.Role> newRoles = new java.util.HashSet<>();
+             for (String roleName : request.getRoles()) {
+                 org.example.foodanddrinkproject.entity.Role role = roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new BadRequestException("Role not found: " + roleName));
+                 newRoles.add(role);
+             }
+             user.setRoles(newRoles);
+         }
+         
+         user.setEnabled(request.isEnabled());
+         userRepository.save(user);
+    }
+
+    @Override
+    public java.util.List<org.example.foodanddrinkproject.entity.Role> getAllRoles() {
+        return roleRepository.findAll();
     }
 
     private UserProfileDto convertToDto(User user) {
         UserProfileDto dto = new UserProfileDto();
 
-        // --- MAP FIELDS MANUALLY ---
         dto.setId(user.getId());
         dto.setEmail(user.getEmail());
         dto.setFullName(user.getFullName());
@@ -112,8 +143,8 @@ public class UserServiceImpl implements UserService {
             dto.setAuthProvider(user.getAuthProvider().name());
         }
 
-        // Optional: If you added 'isEnabled' to UserProfileDto, map it here too
-        // dto.setEnabled(user.isEnabled());
+        dto.setEnabled(user.isEnabled());
+        dto.setRoles(user.getRoles().stream().map(org.example.foodanddrinkproject.entity.Role::getName).collect(java.util.stream.Collectors.toSet()));
 
         return dto;
     }
@@ -125,6 +156,8 @@ public class UserServiceImpl implements UserService {
         dto.setFullName(user.getFullName());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setAuthProvider(user.getAuthProvider().name());
+        dto.setEnabled(user.isEnabled());
+        dto.setRoles(user.getRoles().stream().map(org.example.foodanddrinkproject.entity.Role::getName).collect(java.util.stream.Collectors.toSet()));
 
         return dto;
     }

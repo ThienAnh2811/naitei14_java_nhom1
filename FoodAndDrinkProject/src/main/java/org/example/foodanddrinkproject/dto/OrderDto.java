@@ -14,6 +14,8 @@ import java.util.List;
 @Setter
 public class OrderDto {
     private Long id;
+    private Long userId;
+    private String userName;
     private LocalDateTime orderDate;
     private String shippingAddress;
     private String userEmail;

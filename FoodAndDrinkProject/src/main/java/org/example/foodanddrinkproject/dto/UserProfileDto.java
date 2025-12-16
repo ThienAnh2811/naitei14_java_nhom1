@@ -13,4 +13,6 @@ public class UserProfileDto {
     private String fullName;
     private String phoneNumber;
     private String authProvider;
+    private boolean isEnabled;
+    private java.util.Set<String> roles;
 }

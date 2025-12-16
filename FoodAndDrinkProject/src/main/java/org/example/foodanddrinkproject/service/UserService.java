@@ -13,4 +13,7 @@ public interface    UserService {
 
     Page<UserProfileDto> getAllUsers(Pageable pageable);
     void banUser(Long userId, boolean isEnabled);
+    void updateUser(Long userId, org.example.foodanddrinkproject.dto.AdminUpdateUserRequest request);
+    org.example.foodanddrinkproject.dto.UserProfileDto getUserById(Long id);
+    java.util.List<org.example.foodanddrinkproject.entity.Role> getAllRoles();
 }

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{admin/layout :: layout(~{::div})}">
+
+<body>
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Review Management</h2>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Product</th>
+                            <th>User</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="review : ${reviews.content}">
+                            <td th:text="${review.id}">1</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img th:if="${review.product.imageUrl}" th:src="${review.product.imageUrl}"
+                                        class="rounded me-2" width="40" height="40" style="object-fit: cover;">
+                                    <a th:href="@{/admin/products/edit/{id}(id=${review.product.id})}"
+                                        th:text="${review.product.name}"
+                                        class="fw-bold text-decoration-none">Product</a>
+                                </div>
+                            </td>
+                            <td>
+                                <span th:text="${review.user.fullName}">User</span>
+                            </td>
+                            <td>
+                                <div class="text-warning">
+                                    <i th:each="i : ${#numbers.sequence(1, review.ratingValue)}"
+                                        class="fas fa-star"></i><i th:if="${review.ratingValue < 5}"
+                                        th:each="i : ${#numbers.sequence(review.ratingValue + 1, 5)}"
+                                        class="far fa-star"></i>
+                                </div>
+                            </td>
+                            <td th:text="${review.comment}" class="text-wrap" style="max-width: 300px;">Great!</td>
+                            <td th:text="${review.createdAt}">2023-01-01</td>
+                            <td>
+                                <a th:href="@{/admin/reviews/delete/{id}(id=${review.id})}"
+                                    class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Are you sure? This cannot be undone.')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${reviews.empty}">
+                            <td colspan="7" class="text-center py-4 text-muted">No reviews found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer" th:if="${reviews.totalPages > 1}">
+                <!-- Basic Pagination (Can be extracted to fragment) -->
+                <nav>
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        <li class="page-item" th:classappend="${reviews.first} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/reviews(page=${reviews.number - 1})}">Previous</a>
+                        </li>
+                        <li class="page-item" th:classappend="${reviews.last} ? 'disabled'">
+                            <a class="page-link" th:href="@{/admin/reviews(page=${reviews.number + 1})}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
