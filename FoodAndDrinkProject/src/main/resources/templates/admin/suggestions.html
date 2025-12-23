@@ -3,7 +3,8 @@
 
 <body>
     <div class="container-fluid">
-        <h2 class="mb-4">Customer Suggestions</h2>
+        <h2 class="mb-4">💡 New Product Suggestions</h2>
+        <p class="text-muted mb-4">Customers can suggest new products they'd like to see in the store.</p>
 
         <div class="card shadow-sm">
             <div class="card-body p-0">
@@ -12,8 +13,9 @@
                         <tr>
                             <th>Date</th>
                             <th>User</th>
-                            <th>Product</th>
-                            <th>Suggestion</th>
+                            <th>Suggested Product</th>
+                            <th>Category</th>
+                            <th>Image</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -21,8 +23,21 @@
                         <tr th:each="item : ${suggestions.content}">
                             <td th:text="${#temporals.format(item.createdAt, 'dd-MM-yyyy HH:mm')}">Date</td>
                             <td th:text="${item.userName}">John Doe</td>
-                            <td class="fw-bold text-primary" th:text="${item.productName}">Burger</td>
-                            <td th:text="${item.content}">This is too salty!</td>
+                            <td>
+                                <div class="fw-bold text-primary" th:text="${item.suggestedName}">Product Name</div>
+                                <small class="text-muted" th:if="${item.description}"
+                                    th:text="${#strings.abbreviate(item.description, 100)}">Description...</small>
+                            </td>
+                            <td>
+                                <span th:if="${item.categoryName}" class="badge bg-secondary"
+                                    th:text="${item.categoryName}">Category</span>
+                                <span th:unless="${item.categoryName}" class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <img th:if="${item.imageUrl}" th:src="${item.imageUrl}" class="rounded" width="50"
+                                    height="50" style="object-fit: cover;">
+                                <span th:unless="${item.imageUrl}" class="text-muted">No image</span>
+                            </td>
                             <td>
                                 <a th:href="@{/admin/suggestions/delete/{id}(id=${item.id})}"
                                     class="btn btn-sm btn-outline-danger"
@@ -32,7 +47,10 @@
                             </td>
                         </tr>
                         <tr th:if="${suggestions.empty}">
-                            <td colspan="4" class="text-center py-4 text-muted">No suggestions yet.</td>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p class="mb-0">No product suggestions yet.</p>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

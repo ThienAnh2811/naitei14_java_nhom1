@@ -54,6 +54,23 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<ProductDto> getAllProductsAdmin(
+            String name, Integer categoryId, ProductType type,
+            BigDecimal minPrice, BigDecimal maxPrice,
+            Pageable pageable
+    ) {
+        // No isActive filter - admin sees all products
+        Specification<Product> spec =
+                productSpecification.hasName(name)
+                        .and(productSpecification.hasCategory(categoryId))
+                        .and(productSpecification.hasType(type))
+                        .and(productSpecification.priceBetween(minPrice, maxPrice));
+
+        Page<Product> productsPage = productRepository.findAll(spec, pageable);
+        return productsPage.map(this::convertToDto);
+    }
+
+    @Override
     public ProductDto getProductById(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "id", productId));
