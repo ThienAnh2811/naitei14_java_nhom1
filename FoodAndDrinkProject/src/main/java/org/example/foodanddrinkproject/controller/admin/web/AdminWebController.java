@@ -96,8 +96,8 @@ public class AdminWebController {
             Model model,
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         
-        model.addAttribute("products", productService.getAllProducts(
-                name, null, categoryId, type, minPrice, maxPrice, null, pageable));
+        model.addAttribute("products", productService.getAllProductsAdmin(
+                name, categoryId, type, minPrice, maxPrice, pageable));
         
         // For filter form
         model.addAttribute("categories", categoryService.getAllCategories());
@@ -129,6 +129,9 @@ public class AdminWebController {
         request.setDescription(product.getDescription());
         request.setImageUrl(product.getImageUrl());
         request.setSku(product.getSku());
+        request.setBrand(product.getBrand());
+        request.setProductType(ProductType.valueOf(product.getProductType()));
+        request.setIsActive(product.isActive());
 
         model.addAttribute("productRequest", request);
         model.addAttribute("productId", id).addAttribute("categories", categoryService.getAllCategories());
@@ -150,20 +153,45 @@ public class AdminWebController {
             return "admin/product-form";
         }
 
-        // Handle file upload
-        if (request.getImageFile() != null && !request.getImageFile().isEmpty()) {
-            String imagePath = fileStorageService.storeFile(request.getImageFile(), "products");
-            request.setImageUrl(imagePath);
-        }
+        try {
+            // Handle file upload
+            if (request.getImageFile() != null && !request.getImageFile().isEmpty()) {
+                String imagePath = fileStorageService.storeFile(request.getImageFile(), "products");
+                request.setImageUrl(imagePath);
+            }
 
-        if (id != null) {
-            productService.updateProduct(id, request);
-            redirectAttributes.addFlashAttribute("success", "Product updated successfully!");
-        } else {
-            productService.createProduct(request);
-            redirectAttributes.addFlashAttribute("success", "Product created successfully!");
+            if (id != null) {
+                productService.updateProduct(id, request);
+                redirectAttributes.addFlashAttribute("success", "Product updated successfully!");
+            } else {
+                productService.createProduct(request);
+                redirectAttributes.addFlashAttribute("success", "Product created successfully!");
+            }
+            return "redirect:/admin/products";
+            
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Handle duplicate SKU or other database constraints
+            model.addAttribute("error", "SKU already exists. Please use a unique SKU.");
+            model.addAttribute("categories", categoryService.getAllCategories());
+            if (id != null) {
+                model.addAttribute("productId", id);
+            }
+            return "admin/product-form";
+        } catch (org.example.foodanddrinkproject.exception.BadRequestException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("categories", categoryService.getAllCategories());
+            if (id != null) {
+                model.addAttribute("productId", id);
+            }
+            return "admin/product-form";
+        } catch (Exception e) {
+            model.addAttribute("error", "An error occurred: " + e.getMessage());
+            model.addAttribute("categories", categoryService.getAllCategories());
+            if (id != null) {
+                model.addAttribute("productId", id);
+            }
+            return "admin/product-form";
         }
-        return "redirect:/admin/products";
     }
 
     @GetMapping("/products/delete/{id}")
@@ -273,8 +301,25 @@ public class AdminWebController {
     }
 
     @GetMapping("/reviews")
-    public String listReviews(Model model, Pageable pageable) {
-        model.addAttribute("reviews", ratingService.getAllRatings(pageable));
+    public String listReviews(
+            @RequestParam(required = false) Long productId,
+            Model model, 
+            Pageable pageable) {
+        model.addAttribute("reviews", ratingService.getAllRatingsFiltered(productId, pageable));
+        
+        var products = productService.getAllProductsAdmin(null, null, null, null, null, 
+                org.springframework.data.domain.PageRequest.of(0, 1000)).getContent();
+        model.addAttribute("products", products);
+        model.addAttribute("filterProductId", productId);
+        
+        // Find selected product name for display
+        if (productId != null) {
+            products.stream()
+                    .filter(p -> p.getId().equals(productId))
+                    .findFirst()
+                    .ifPresent(p -> model.addAttribute("selectedProductName", p.getName()));
+        }
+        
         return "admin/reviews";
     }
 

@@ -16,9 +16,26 @@ public class Suggestion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Suggested product name
+    @Column(name = "suggested_name")
+    private String suggestedName;
+
+    // Product description
     @Lob
-    @Column(name = "suggestion_text", nullable = false)
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    // Keep old field for backward compatibility, but nullable
+    @Lob
+    @Column(name = "suggestion_text")
     private String suggestionText;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    @Column(name = "image_url", length = 512)
+    private String imageUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -87,6 +87,7 @@
                 <th>Product Details</th>
                 <th>Category</th>
                 <th>Price</th>
+                <th>Rating</th>
                 <th>Stock</th>
                 <th>Status</th>
                 <th class="text-end pe-4">Actions</th>
@@ -133,15 +134,24 @@
                 </td>
 
                 <td>
+                  <div class="text-warning" style="font-size: 0.8rem;">
+                    <span
+                      th:each="i : ${#numbers.sequence(1, T(java.lang.Math).round(product.avgRating))}">★</span><span
+                      th:if="${T(java.lang.Math).round(product.avgRating) < 5}"
+                      th:each="i : ${#numbers.sequence(T(java.lang.Math).round(product.avgRating) + 1, 5)}"
+                      class="text-muted">☆</span>
+                  </div>
+                  <small class="text-muted" th:text="${#numbers.formatDecimal(product.avgRating, 1, 1)}"></small>
+                </td>
+
+                <td>
                   <span th:text="${product.stockQuantity}" class="fw-bold">100</span>
-                  <span class="text-muted small"> units</span>
+                  <span class="text-muted small">units</span>
                 </td>
 
                 <td>
                   <span th:unless="${product.active}" class="badge bg-secondary">Inactive</span>
-
                   <span th:if="${product.active and product.stockQuantity > 0}" class="badge bg-success">Active</span>
-
                   <span th:if="${product.active and product.stockQuantity == 0}" class="badge bg-danger">Out of
                     Stock</span>
                 </td>
@@ -162,7 +172,7 @@
               </tr>
 
               <tr th:if="${products.empty}">
-                <td colspan="8" class="text-center py-5">
+                <td colspan="9" class="text-center py-5">
                   <div class="text-muted mb-3">
                     <i class="fas fa-box-open fa-3x"></i>
                   </div>

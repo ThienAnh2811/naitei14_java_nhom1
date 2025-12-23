@@ -7,6 +7,56 @@
             <h2>Review Management</h2>
         </div>
 
+        <!-- Filter Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">🔍 Filter Reviews</span>
+                    <a href="/admin/reviews" class="btn btn-sm btn-outline-secondary">Clear Filter</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" action="/admin/reviews">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label small">Search Product</label>
+                            <input type="text" id="productSearch" class="form-control form-control-sm"
+                                placeholder="Type product name..." list="productList" th:value="${selectedProductName}">
+                            <input type="hidden" name="productId" id="productIdInput" th:value="${filterProductId}">
+                            <datalist id="productList">
+                                <option th:each="product : ${products}" th:value="${product.name}"
+                                    th:data-id="${product.id}">
+                                </option>
+                            </datalist>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">Apply</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function () {
+                const searchInput = document.getElementById('productSearch');
+                const productIdInput = document.getElementById('productIdInput');
+                const products = /*[[${products}]]*/[];
+
+                searchInput.addEventListener('input', function () {
+                    const searchValue = this.value.toLowerCase();
+                    const match = products.find(p => p.name.toLowerCase() === searchValue);
+                    productIdInput.value = match ? match.id : '';
+                });
+
+                searchInput.addEventListener('change', function () {
+                    const searchValue = this.value.toLowerCase();
+                    const match = products.find(p => p.name.toLowerCase() === searchValue);
+                    productIdInput.value = match ? match.id : '';
+                });
+            });
+        </script>
+
         <div class="card shadow-sm">
             <div class="card-body p-0">
                 <table class="table table-hover align-middle mb-0">
@@ -39,7 +89,8 @@
                             <td>
                                 <div class="text-warning">
                                     <i th:each="i : ${#numbers.sequence(1, review.ratingValue)}"
-                                        class="fas fa-star"></i><i th:if="${review.ratingValue < 5}"
+                                        class="fas fa-star"></i>
+                                    <i th:if="${review.ratingValue < 5}"
                                         th:each="i : ${#numbers.sequence(review.ratingValue + 1, 5)}"
                                         class="far fa-star"></i>
                                 </div>

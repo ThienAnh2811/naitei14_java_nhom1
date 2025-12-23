@@ -10,9 +10,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ProductService {
+    // For user API - only active products
     Page<ProductDto> getAllProducts(
             String name, String brand, Integer categoryId, ProductType type,
             BigDecimal minPrice, BigDecimal maxPrice, Double minRating,
+            Pageable pageable
+    );
+    
+    // For admin - all products including inactive
+    Page<ProductDto> getAllProductsAdmin(
+            String name, Integer categoryId, ProductType type,
+            BigDecimal minPrice, BigDecimal maxPrice,
             Pageable pageable
     );
 
